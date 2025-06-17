@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng Dụng Đề Xuất Món Ăn</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-utensils"></i> Ứng Dụng Đề Xuất Món Ăn</h1>
+            <p>Sử dụng Prolog để phân tích nguyên liệu và đề xuất món ăn phù hợp</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="suggest">Đề Xuất Món Ăn</button>
+                <button class="tab-btn" data-tab="recipes">Quản Lý Món Ăn</button>
+                <button class="tab-btn" data-tab="replacements">Quản Lý Thay Thế</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Tab 1: Đề Xuất Món Ăn -->
+                <div id="suggest" class="tab-pane active">
+                    <div class="ingredient-input-section">
+                        <h2><i class="fas fa-search"></i> Nhập Nguyên Liệu Có Sẵn</h2>
+                        <div class="ingredient-input-container">
+                            <div class="ingredient-input-group">
+                                <input type="text" id="ingredientInput" placeholder="Nhập nguyên liệu...">
+                                <button id="addIngredientBtn" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Thêm
+                                </button>
+                            </div>
+                            <div class="ingredient-suggestions" id="ingredientSuggestions"></div>
+                        </div>
+                        
+                        <div class="selected-ingredients">
+                            <h3>Nguyên liệu đã chọn:</h3>
+                            <div id="selectedIngredients" class="ingredient-tags"></div>
+                        </div>
+
+                        <button id="suggestBtn" class="btn btn-success btn-large">
+                            <i class="fas fa-magic"></i> Đề Xuất Món Ăn
+                        </button>
+                    </div>
+
+                    <div class="suggestions-section">
+                        <h2><i class="fas fa-list"></i> Món Ăn Đề Xuất</h2>
+                        <div id="suggestionsList" class="suggestions-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Quản Lý Món Ăn -->
+                <div id="recipes" class="tab-pane">
+                    <div class="recipe-management">
+                        <div class="add-recipe-section">
+                            <h2><i class="fas fa-plus-circle"></i> Thêm Món Ăn Mới</h2>
+                            <form id="addRecipeForm" class="recipe-form">
+                                <div class="form-group">
+                                    <label for="recipeName">Tên món ăn:</label>
+                                    <input type="text" id="recipeName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recipeIngredients">Nguyên liệu (phân cách bằng dấu phẩy):</label>
+                                    <textarea id="recipeIngredients" placeholder="vd: thit ga, bot, hanh, toi" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Thêm Món Ăn
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="recipes-list-section">
+                            <h2><i class="fas fa-book"></i> Danh Sách Món Ăn</h2>
+                            <div id="recipesList" class="recipes-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Quản Lý Thay Thế -->
+                <div id="replacements" class="tab-pane">
+                    <div class="replacement-management">
+                        <div class="add-replacement-section">
+                            <h2><i class="fas fa-exchange-alt"></i> Thêm Nguyên Liệu Thay Thế</h2>
+                            <form id="addReplacementForm" class="replacement-form">
+                                <div class="form-group">
+                                    <label for="originalIngredient">Nguyên liệu gốc:</label>
+                                    <input type="text" id="originalIngredient" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="alternativeIngredient">Nguyên liệu thay thế:</label>
+                                    <input type="text" id="alternativeIngredient" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Thêm Thay Thế
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="replacements-list-section">
+                            <h2><i class="fas fa-list-alt"></i> Danh Sách Thay Thế</h2>
+                            <div id="replacementsList" class="replacements-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Modal -->
+        <div id="loadingModal" class="modal">
+            <div class="modal-content">
+                <div class="spinner"></div>
+                <p>Đang xử lý...</p>
+            </div>
+        </div>
+
+        <!-- Recipe Detail Modal -->
+        <div id="recipeModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modalRecipeName"></h2>
+                <div class="recipe-details">
+                    <div id="modalRecipeIngredients" class="ingredient-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
