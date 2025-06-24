@@ -218,7 +218,7 @@ body {
     display: inline-flex;         /* Đổi từ inline-block sang inline-flex */
     align-items: center;          /* Căn giữa theo chiều dọc */
     gap: 6px;                     /* Khoảng cách giữa tên và nút x */
-    background: #51cf66;
+    background: #667eea;
     color: white;
     padding: 8px 16px;
     border-radius: 20px;
@@ -433,7 +433,7 @@ body {
 
 /* Recipe Details */
 .recipe-details h3 {
-    margin-bottom: 15px;
+    margin-top: 5px;
     color: #495057;
 }
 
@@ -447,7 +447,7 @@ body {
 
 /* Modal Recipe Details */
 #modalRecipeIngredients {
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 #modalRecipeIngredients h4 {

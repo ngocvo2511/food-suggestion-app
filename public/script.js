@@ -243,7 +243,7 @@ function displaySuggestions(suggestions) {
         card.className = 'suggestion-card';
         card.innerHTML = `
             <h3>${suggestion.recipe}</h3>
-            <p>Nguyên liệu thực tế: ${suggestion.usedIngredients.map(i => `<span class='ingredient-tag' style='background:#51cf66'>${i}</span>`).join(' ')}</p>
+            <p>Nguyên liệu cần thiết: ${suggestion.usedIngredients.map(i => `<span class='ingredient-tag' style='background:#667eea'>${i}</span>`).join(' ')}</p>
         `;
         card.addEventListener('click', () => showRecipeDetails(suggestion.recipe, suggestion.usedIngredients));
         suggestionsList.appendChild(card);
@@ -279,7 +279,6 @@ async function showRecipeDetails(recipeName, usedIngredients = null) {
         modalRecipeIngredients.innerHTML = '';
         // Tạo tiêu đề
         const title = document.createElement('h4');
-        title.textContent = 'Nguyên liệu cần thiết:';
         modalRecipeIngredients.appendChild(title);
         // Tạo danh sách nguyên liệu
         const list = document.createElement('div');
@@ -292,11 +291,10 @@ async function showRecipeDetails(recipeName, usedIngredients = null) {
                 span.style.background = '#ff6b6b';
             } else if (item.type === 'direct') {
                 span.textContent = item.used;
-                span.style.background = '#51cf66';
+                span.style.background = '#667eea';
             } else {
                 span.textContent = item.required;
-                span.style.background = '#868e96';
-                span.style.opacity = '0.6';
+                span.style.background = '#667eea';
             }
             list.appendChild(span);
         });
