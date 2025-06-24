@@ -26,6 +26,10 @@ recipe('Banh Xeo', ['bot', 'trung', 'tom', 'thit heo', 'rau song', 'nuoc mam']).
 recipe('Coca', ['chanh', 'duong', 'soda']).
 recipe('canh chua ca loc', ['ca loc', 'la giang', 'muoi', 'duong', 'bot ngot']).
 recipe('Thit Luoc Mam Nem', ['thit ba chi', 'mam nem']).
+recipe('Com Chien Duong Chau', ['com', 'trung', 'cha', 'ca chua', 'nuoc tuong', 'hanh']).
+recipe('Bo Hap Nuoc Dua', ['thit bo', 'nuoc dua']).
+recipe('Cha Ram Tom Dat', ['banh trang', 'tom dat', 'thit xay', 'nam']).
+recipe('Banh Mi Nuong Muoi Ot', ['banh mi', 'xuc xich', 'cha', 'nem', 'cha bong', 'kho muc', 'tuong ot']).
 
 % Định nghĩa các nguyên liệu thay thế
 replacement('thit ga', 'thit bo').
@@ -36,8 +40,6 @@ replacement('thit bo', 'thit heo').
 replacement('thit bo', 'thit ga').
 replacement('nuoc mam', 'tuong').
 replacement('tuong', 'nuoc mam').
-replacement('tom', 'muc').
-replacement('muc', 'tom').
 replacement('ca chua', 'dua chua').
 replacement('dua chua', 'ca chua').
 replacement('hanh', 'toi').
@@ -51,6 +53,7 @@ replacement('bun', 'mi').
 replacement('thit ga', 'thit vit').
 replacement('ca chua', 'ot').
 replacement('com', 'xoi').
+replacement('kho muc', 'kho ga').
 
 % Kiểm tra xem danh sách nguyên liệu có thể bao gồm cả nguyên liệu thay thế
 ingredient_available(Ingredient, Ingredients) :-

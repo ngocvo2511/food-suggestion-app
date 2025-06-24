@@ -2,6 +2,7 @@
 let allIngredients = [];
 let allRecipes = [];
 let selectedIngredients = [];
+let allReplacements = [];
 
 // DOM elements
 const tabBtns = document.querySelectorAll('.tab-btn');
@@ -32,17 +33,20 @@ async function initializeApp() {
     try {
         showLoading();
         
-        // Load all ingredients and recipes
-        const [ingredientsResponse, recipesResponse] = await Promise.all([
+        // Load all ingredients, recipes, and replacements
+        const [ingredientsResponse, recipesResponse, replacementsResponse] = await Promise.all([
             fetch('/api/ingredients'),
-            fetch('/api/recipes')
+            fetch('/api/recipes'),
+            fetch('/api/replacements')
         ]);
         
         const ingredientsData = await ingredientsResponse.json();
         const recipesData = await recipesResponse.json();
+        const replacementsData = await replacementsResponse.json();
         
         allIngredients = ingredientsData.ingredients || [];
         allRecipes = recipesData.recipes || [];
+        allReplacements = replacementsData.replacements || [];
         
         // Load initial data for each tab
         loadRecipesList();
@@ -220,6 +224,33 @@ async function suggestRecipes() {
     }
 }
 
+function getIngredientAlternatives(ingredient) {
+    // Lấy tất cả các nguyên liệu thay thế cho một nguyên liệu
+    const alternatives = allReplacements
+        .filter(r => r.ingredient === ingredient)
+        .map(r => r.alternative);
+    // Đảm bảo không có lặp lại và sắp xếp
+    return Array.from(new Set(alternatives)).sort();
+}
+
+function groupIngredientsWithAlternatives(ingredients) {
+    // Gom nhóm các nguyên liệu có thể thay thế
+    const grouped = [];
+    const used = new Set();
+    ingredients.forEach(ing => {
+        if (used.has(ing)) return;
+        const alternatives = getIngredientAlternatives(ing).filter(alt => ingredients.includes(alt));
+        if (alternatives.length > 0) {
+            grouped.push([ing, ...alternatives].sort());
+            [ing, ...alternatives].forEach(i => used.add(i));
+        } else {
+            grouped.push([ing]);
+            used.add(ing);
+        }
+    });
+    return grouped;
+}
+
 function displaySuggestions(suggestions) {
     suggestionsList.innerHTML = '';
     if (suggestions.length === 0) {
@@ -231,21 +262,39 @@ function displaySuggestions(suggestions) {
         `;
         return;
     }
-    // Loại bỏ trùng lặp (cùng món, cùng usedIngredients)
-    const unique = [];
+    // Gom nhóm các tổ hợp nguyên liệu của cùng một món ăn
+    const recipeMap = {};
     suggestions.forEach(s => {
-        if (!unique.some(u => u.recipe === s.recipe && JSON.stringify(u.usedIngredients) === JSON.stringify(s.usedIngredients))) {
-            unique.push(s);
+        if (!recipeMap[s.recipe]) {
+            recipeMap[s.recipe] = [];
         }
+        recipeMap[s.recipe].push(s.usedIngredients);
     });
-    unique.forEach(suggestion => {
+    Object.entries(recipeMap).forEach(async ([recipe, usedIngredientsList]) => {
+        // Lấy nguyên liệu gốc của món ăn
+        let recipeOriginalIngredients = [];
+        try {
+            const responseRecipe = await fetch(`/api/recipe/${encodeURIComponent(recipe)}/usage`);
+            const dataRecipe = await responseRecipe.json();
+            if (responseRecipe.ok) {
+                recipeOriginalIngredients = dataRecipe.usageInfo.map(item => item.required);
+            }
+        } catch (e) {}
+        // Gom nhóm từng nguyên liệu gốc theo đúng vị trí
+        const ingredientGroups = recipeOriginalIngredients.map((orig, idx) => {
+            const values = usedIngredientsList.map(arr => arr[idx]).filter(Boolean);
+            const unique = Array.from(new Set(values));
+            return unique;
+        });
+        // Tạo đoạn text: nếu có nhiều giá trị thì gộp bằng '/', còn không thì chỉ ghi một giá trị
+        const ingredientStr = ingredientGroups.map(group => group.length > 1 ? group.join('/') : group[0]).join(', ');
         const card = document.createElement('div');
         card.className = 'suggestion-card';
         card.innerHTML = `
-            <h3>${suggestion.recipe}</h3>
-            <p>Nguyên liệu cần thiết: ${suggestion.usedIngredients.map(i => `<span class='ingredient-tag' style='background:#667eea'>${i}</span>`).join(' ')}</p>
+            <h3>${recipe}</h3>
+            <p style="font-size:1.05rem;color:#333;margin-top:8px;">${ingredientStr}</p>
         `;
-        card.addEventListener('click', () => showRecipeDetails(suggestion.recipe, suggestion.usedIngredients));
+        card.addEventListener('click', () => showRecipeDetails(recipe, usedIngredientsList));
         suggestionsList.appendChild(card);
     });
 }
@@ -254,50 +303,42 @@ function displaySuggestions(suggestions) {
 async function showRecipeDetails(recipeName, usedIngredients = null) {
     try {
         showLoading();
-        let usageInfo = null;
-        if (usedIngredients) {
-            // Nếu đã biết usedIngredients, hiển thị luôn
-            usageInfo = usedIngredients.map((used, idx) => ({
-                required: used,
-                used: used,
-                type: 'direct'
-            }));
-        } else {
-            // Lấy thông tin chi tiết về cách sử dụng nguyên liệu
-            const ingredientsParam = selectedIngredients.join(',');
-            const response = await fetch(`/api/recipe/${encodeURIComponent(recipeName)}/usage?ingredients=${encodeURIComponent(ingredientsParam)}`);
-            const data = await response.json();
-            if (response.ok) {
-                usageInfo = data.usageInfo;
-            } else {
-                showError('Không thể tải thông tin món ăn.');
-                hideLoading();
-                return;
-            }
+        let recipeOriginalIngredients = [];
+        // Lấy nguyên liệu gốc của món ăn
+        const responseRecipe = await fetch(`/api/recipe/${encodeURIComponent(recipeName)}/usage`);
+        const dataRecipe = await responseRecipe.json();
+        if (responseRecipe.ok) {
+            recipeOriginalIngredients = dataRecipe.usageInfo.map(item => item.required);
         }
         modalRecipeName.textContent = recipeName;
         modalRecipeIngredients.innerHTML = '';
-        // Tạo tiêu đề
         const title = document.createElement('h4');
         modalRecipeIngredients.appendChild(title);
-        // Tạo danh sách nguyên liệu
         const list = document.createElement('div');
         list.className = 'ingredient-list';
-        usageInfo.forEach(item => {
-            const span = document.createElement('span');
-            span.className = 'ingredient-tag';
-            if (item.type === 'replacement') {
-                span.textContent = `${item.required} (thay bằng ${item.used})`;
-                span.style.background = '#ff6b6b';
-            } else if (item.type === 'direct') {
-                span.textContent = item.used;
+        if (Array.isArray(usedIngredients) && Array.isArray(usedIngredients[0])) {
+            // Đề xuất món ăn: gom nhóm từng vị trí
+            const ingredientGroups = recipeOriginalIngredients.map((orig, idx) => {
+                const usedSet = new Set(usedIngredients.map(arr => arr[idx]).filter(Boolean));
+                return Array.from(usedSet);
+            });
+            ingredientGroups.forEach(group => {
+                const span = document.createElement('span');
+                span.className = 'ingredient-tag';
                 span.style.background = '#667eea';
-            } else {
-                span.textContent = item.required;
+                span.textContent = group.length > 1 ? group.join('/') : group[0];
+                list.appendChild(span);
+            });
+        } else {
+            // Quản lý món ăn: chỉ hiện nguyên liệu gốc
+            recipeOriginalIngredients.forEach(ing => {
+                const span = document.createElement('span');
+                span.className = 'ingredient-tag';
                 span.style.background = '#667eea';
-            }
-            list.appendChild(span);
-        });
+                span.textContent = ing;
+                list.appendChild(span);
+            });
+        }
         modalRecipeIngredients.appendChild(list);
         recipeModal.style.display = 'block';
         hideLoading();
@@ -417,7 +458,6 @@ async function loadRecipesList() {
 
 function displayRecipesList(recipes) {
     recipesList.innerHTML = '';
-    
     recipes.forEach(recipe => {
         const item = document.createElement('div');
         item.className = 'recipe-item';
